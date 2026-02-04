@@ -7,7 +7,7 @@ const QPP_DATA = {
     '3ª Cia': ['Boqueirão', 'Barra de São Miguel', 'Cabaceiras', 'Riacho de Santo Antônio', 'São Domingos do Cariri']
 };
 
-// Ordem de antiguidade das graduações (índice menor = mais antigo)
+// Ordem de antiguidade das graduações (índice menor = mais antigo/alto)
 const ORDEM_GRADUACOES = {
     'Subtenente (ST)': 0,
     '1º Sargento (1º SGT)': 1,
@@ -27,7 +27,7 @@ const form = document.getElementById('pm-form');
 const inputId = document.getElementById('pm-id');
 const inputNome = document.getElementById('pm-nome');
 const inputMatricula = document.getElementById('pm-matricula');
-const selectGuerra = document.getElementById('pm-nome-guerra');
+const inputGuerra = document.getElementById('pm-nome-guerra');
 const selectGraduacao = document.getElementById('pm-graduacao');
 const selectCompanhia = document.getElementById('pm-companhia');
 const selectQpp = document.getElementById('pm-qpp');
@@ -50,7 +50,6 @@ window.addEventListener('DOMContentLoaded', function() {
 // EVENTOS
 // ============================================
 function configurarEventos() {
-    inputNome.addEventListener('input', atualizarNomesGuerra);
     selectCompanhia.addEventListener('change', atualizarQpp);
     inputMatricula.addEventListener('input', validarMatricula);
     form.addEventListener('submit', salvarPm);
@@ -71,27 +70,6 @@ function formatarMatricula(numero) {
     const n = numero.replace(/[^0-9]/g, '');
     if (n.length !== 7) return numero;
     return n.substring(0, 3) + '.' + n.substring(3, 6) + '-' + n.substring(6, 7);
-}
-
-// ============================================
-// NOME DE GUERRA
-// ============================================
-function atualizarNomesGuerra() {
-    const nome = inputNome.value.trim();
-    const nomes = nome.split(/\s+/).filter(n => n.length > 0).map(n => n.toUpperCase());
-
-    selectGuerra.innerHTML = '<option value="">Selecione um nome</option>';
-
-    nomes.forEach(n => {
-        const opt = document.createElement('option');
-        opt.value = n;
-        opt.textContent = n;
-        selectGuerra.appendChild(opt);
-    });
-
-    if (nomes.length === 1) {
-        selectGuerra.value = nomes[0];
-    }
 }
 
 // ============================================
@@ -123,7 +101,7 @@ function salvarPm(e) {
 
     const nome = inputNome.value.trim();
     const matricula = inputMatricula.value.trim();
-    const guerra = selectGuerra.value.trim();
+    const guerra = inputGuerra.value.trim().toUpperCase();
     const graduacao = selectGraduacao.value;
     const cia = selectCompanhia.value;
     const qpp = selectQpp.value;
@@ -140,7 +118,7 @@ function salvarPm(e) {
         return;
     }
     if (!guerra) {
-        alert('Selecione um Nome de Guerra');
+        alert('Preencha o Nome de Guerra');
         return;
     }
     if (!graduacao) {
@@ -200,13 +178,11 @@ function editarPm(id) {
     inputId.value = id;
     inputNome.value = pm.nome;
     inputMatricula.value = pm.matricula.replace(/[^0-9]/g, '');
+    inputGuerra.value = pm.nomeGuerra;
     selectGraduacao.value = pm.graduacao;
     selectCompanhia.value = pm.companhia;
     selectSituacao.value = pm.situacao;
     selectFuncao.value = pm.funcao;
-
-    atualizarNomesGuerra();
-    selectGuerra.value = pm.nomeGuerra;
 
     atualizarQpp();
     selectQpp.value = pm.qpp;
@@ -235,7 +211,6 @@ function excluirPm(id) {
 function limparFormulario() {
     form.reset();
     inputId.value = '';
-    selectGuerra.innerHTML = '<option value="">Selecione um nome</option>';
     selectQpp.innerHTML = '<option value="">Selecione o QPP</option>';
     selectQpp.disabled = true;
     selectSituacao.value = 'Apto ao Serviço';
@@ -247,17 +222,23 @@ function limparFormulario() {
 // ============================================
 function ordenarPmsPorAntiguidade() {
     return [...PMS].sort((a, b) => {
-        // Primeiro, ordena por graduação (mais antigo primeiro)
-        const ordemA = ORDEM_GRADUACOES[a.graduacao] || 999;
-        const ordemB = ORDEM_GRADUACOES[b.graduacao] || 999;
+        // PRIMEIRO CRITÉRIO: Ordenar por graduação (mais antigo/alto primeiro)
+        const ordemGraduacaoA = ORDEM_GRADUACOES[a.graduacao];
+        const ordemGraduacaoB = ORDEM_GRADUACOES[b.graduacao];
 
-        if (ordemA !== ordemB) {
-            return ordemA - ordemB;
+        console.log(`Comparando: ${a.nomeGuerra} (${a.graduacao}, ordem ${ordemGraduacaoA}) vs ${b.nomeGuerra} (${b.graduacao}, ordem ${ordemGraduacaoB})`);
+
+        // Se as ordens de graduação forem diferentes, usa-se apenas a graduação
+        if (ordemGraduacaoA !== ordemGraduacaoB) {
+            console.log(`Diferença de graduação: ${ordemGraduacaoA - ordemGraduacaoB}`);
+            return ordemGraduacaoA - ordemGraduacaoB;
         }
 
-        // Se a graduação for a mesma, ordena por matrícula (menor = mais antigo)
-        const matriculaA = parseInt(a.matricula.replace(/[^0-9]/g, ''));
-        const matriculaB = parseInt(b.matricula.replace(/[^0-9]/g, ''));
+        // SEGUNDO CRITÉRIO (DESEMPATE): Se as graduações forem iguais, ordena por matrícula
+        const matriculaA = parseInt(a.matricula.replace(/[^0-9]/g, ''), 10);
+        const matriculaB = parseInt(b.matricula.replace(/[^0-9]/g, ''), 10);
+
+        console.log(`Mesma graduação, comparando matrículas: ${matriculaA} vs ${matriculaB}`);
 
         return matriculaA - matriculaB;
     });
