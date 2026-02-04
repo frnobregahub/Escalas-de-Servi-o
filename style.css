@@ -22,6 +22,17 @@ header {
     padding: 20px 0;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative; /* Para posicionar o botão */
+}
+
+.header-content {
+    max-width: 1200px; /* Limita a largura do conteúdo do cabeçalho */
+    margin: 0 auto; /* Centraliza o conteúdo */
+    padding: 0 20px; /* Espaçamento interno */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative; /* Para o botão flutuar */
 }
 
 header h1 {
@@ -33,6 +44,26 @@ header p {
     margin: 5px 0 0;
     font-size: 1.1em;
     opacity: 0.9;
+}
+
+.header-button {
+    background-color: #28a745; /* Verde para ação de cadastro */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s ease;
+    position: absolute; /* Posiciona o botão */
+    right: 20px; /* 20px da direita */
+    top: 50%; /* Centraliza verticalmente */
+    transform: translateY(-50%); /* Ajusta para o centro exato */
+    white-space: nowrap; /* Evita quebra de linha no texto do botão */
+}
+
+.header-button:hover {
+    background-color: #218838;
 }
 
 main {

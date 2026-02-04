@@ -1,0 +1,145 @@
+/* Estilos específicos para a página de cadastro de PMs */
+
+.cadastro-pm-main {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    gap: 20px;
+    padding: 20px;
+    flex-grow: 1;
+}
+
+.cadastro-form-section, .pm-list-section {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    padding: 25px;
+    flex: 1;
+    min-width: 300px;
+    max-width: 550px; /* Ajustado para um bom tamanho */
+}
+
+.cadastro-form-section h2, .pm-list-section h2 {
+    color: #0056b3;
+    margin-top: 0;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 0.95em;
+}
+
+.form-group input[type="text"],
+.form-group select {
+    padding: 10px 12px;
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    font-size: 1em;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.form-actions .action-button {
+    padding: 10px 18px;
+    font-size: 1em;
+}
+
+#cancel-pm-form {
+    background-color: #6c757d;
+    color: white;
+}
+#cancel-pm-form:hover {
+    background-color: #5a6268;
+}
+
+#save-pm-button {
+    background-color: #007bff; /* Azul para salvar PM */
+    color: white;
+}
+#save-pm-button:hover {
+    background-color: #0056b3;
+}
+
+/* Estilo para a lista de PMs */
+.pm-item {
+    background-color: #e9f5ff;
+    border: 1px solid #cce5ff;
+    border-left: 5px solid #007bff;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; /* Permite quebra de linha em telas menores */
+}
+
+.pm-item p {
+    margin: 5px 0;
+    flex-basis: 100%; /* Ocupa toda a largura por padrão */
+}
+
+.pm-item .pm-details {
+    flex-grow: 1;
+}
+
+.pm-item .pm-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px; /* Espaçamento em telas menores */
+    flex-basis: 100%; /* Ocupa toda a largura em telas menores */
+    justify-content: flex-end;
+}
+
+@media (min-width: 768px) { /* Em telas maiores, alinha ações ao lado */
+    .pm-item .pm-details {
+        flex-basis: auto;
+    }
+    .pm-item .pm-actions {
+        flex-basis: auto;
+        margin-top: 0;
+    }
+}
+
+
+.pm-item button {
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background-color 0.2s ease;
+}
+
+.pm-item .edit-pm-btn {
+    background-color: #ffc107; /* Amarelo para editar */
+    color: #333;
+}
+.pm-item .edit-pm-btn:hover {
+    background-color: #e0a800;
+}
+
+.pm-item .delete-pm-btn {
+    background-color: #dc3545; /* Vermelho para excluir */
+    color: white;
+}
+.pm-item .delete-pm-btn:hover {
+    background-color: #c82333;
+}

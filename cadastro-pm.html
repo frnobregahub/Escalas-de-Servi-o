@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Policiais Militares</title>
+    <link rel="stylesheet" href="style.css"> <!-- Mantém o estilo base -->
+    <link rel="stylesheet" href="cadastro-pm.css"> <!-- Estilo específico para esta página -->
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Cadastro de Policiais Militares</h1>
+            <p>Gerencie o efetivo do 18º BPM</p>
+            <button id="voltarButton" class="header-button">Voltar ao Calendário</button>
+        </div>
+    </header>
+
+    <main class="cadastro-pm-main">
+        <section class="cadastro-form-section">
+            <h2>Novo Policial Militar</h2>
+            <form id="pm-form">
+                <input type="hidden" id="pm-id">
+                <div class="form-group">
+                    <label for="pm-nome">Nome Completo</label>
+                    <input type="text" id="pm-nome" placeholder="Ex: João da Silva" required>
+                </div>
+                <div class="form-group">
+                    <label for="pm-matricula">Matrícula</label>
+                    <input type="text" id="pm-matricula" placeholder="Ex: 123456" required>
+                </div>
+                <div class="form-group">
+                    <label for="pm-companhia">Companhia</label>
+                    <select id="pm-companhia" required>
+                        <option value="">Selecione a Companhia</option>
+                        <option value="1ª Cia">1ª Cia</option>
+                        <option value="2ª Cia">2ª Cia</option>
+                        <option value="3ª Cia">3ª Cia</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="pm-funcao">Função Principal</label>
+                    <select id="pm-funcao" required>
+                        <option value="">Selecione a Função</option>
+                        <option value="Comandante">Comandante</option>
+                        <option value="Motorista">Motorista</option>
+                        <option value="Patrulheiro">Patrulheiro</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancel-pm-form" class="action-button">Limpar Formulário</button>
+                    <button type="submit" id="save-pm-button" class="action-button">Cadastrar PM</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="pm-list-section">
+            <h2>Policiais Cadastrados</h2>
+            <div id="pm-list">
+                <p>Nenhum policial cadastrado ainda.</p>
+                <!-- Lista de PMs será gerada aqui pelo JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Sistema de Gestão de Escala PM</p>
+    </footer>
+
+    <script src="cadastro-pm.js"></script>
+</body>
+</html>

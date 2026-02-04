@@ -7,6 +7,7 @@ const calendarGrid = document.getElementById('calendar-grid');
 const currentMonthYearSpan = document.getElementById('currentMonthYear');
 const prevMonthButton = document.getElementById('prevMonth');
 const nextMonthButton = document.getElementById('nextMonth');
+const cadastrarPmButton = document.getElementById('cadastrarPmButton'); // Novo botão
 
 // Modal e formulário
 const serviceModal = document.getElementById('service-modal');
@@ -41,15 +42,16 @@ let currentServiceId     = null;   // ID do serviço exibido (se houver)
 let services = [];
 let nextServiceId = 1;
 
-// ----------------------
-// Utilitários de data
-// ----------------------
+// Nomes dos meses e dias (para exibição)
 const monthNames = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
 ];
 const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
+// ----------------------
+// Utilitários de data
+// ----------------------
 function formatDate(date) {
     const d = new Date(date);
     const day   = String(d.getDate()).padStart(2, '0');
@@ -327,6 +329,13 @@ cancelModalButton.addEventListener('click', closeServiceModal);
 editServiceButton.addEventListener('click', activateEditMode);
 deleteServiceButton.addEventListener('click', handleDeleteService);
 serviceForm.addEventListener('submit', handleServiceFormSubmit);
+
+// ----------------------
+// Evento do botão "Cadastrar Policial Militar"
+// ----------------------
+cadastrarPmButton.addEventListener('click', () => {
+    window.location.href = 'cadastro-pm.html'; // Redireciona para a nova página
+});
 
 // ----------------------
 // Inicialização
