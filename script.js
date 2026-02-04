@@ -1,24 +1,49 @@
 // script.js
 
-// Elementos do DOM
+// ----------------------
+// Elementos da página
+// ----------------------
 const calendarGrid = document.getElementById('calendar-grid');
 const currentMonthYearSpan = document.getElementById('currentMonthYear');
 const prevMonthButton = document.getElementById('prevMonth');
 const nextMonthButton = document.getElementById('nextMonth');
-const selectedDateDisplay = document.getElementById('selected-date-display');
-const serviceListDiv = document.getElementById('service-list');
-const addServiceButton = document.getElementById('addServiceButton');
 
-// Variáveis de estado
+// Modal e formulário
+const serviceModal = document.getElementById('service-modal');
+const modalTitle = document.getElementById('modal-title');
+const serviceForm = document.getElementById('service-form');
+
+const serviceIdInput = document.getElementById('service-id');
+const serviceDateInput = document.getElementById('service-date');
+const jornadaServicoInput = document.getElementById('jornada-servico');
+const comandanteInput = document.getElementById('comandante');
+const motoristaInput = document.getElementById('motorista');
+const patrulheiro1Input = document.getElementById('patrulheiro1');
+const patrulheiro2Input = document.getElementById('patrulheiro2');
+
+// Botões do modal
+const deleteServiceButton = document.getElementById('delete-service-btn');
+const editServiceButton   = document.getElementById('edit-service-btn');
+const cancelModalButton   = document.getElementById('cancel-modal-btn');
+const saveServiceButton   = document.getElementById('save-service-btn');
+
+// ----------------------
+// Estado da aplicação
+// ----------------------
 let currentMonth = new Date().getMonth();
-let currentYear = new Date().getFullYear();
-let selectedDate = null; // Armazena a data selecionada no calendário
+let currentYear  = new Date().getFullYear();
 
-// Array para armazenar os serviços (simulando um banco de dados)
-// Cada serviço será um objeto com propriedades como data, companhia, tipo, etc.
+let selectedDateForModal = null;   // Date do dia clicado
+let currentServiceId     = null;   // ID do serviço exibido (se houver)
+
+// "Banco de dados" em memória
+// Cada item: { id, date (DD/MM/YYYY), jornada, comandante, motorista, patrulheiro1, patrulheiro2 }
 let services = [];
+let nextServiceId = 1;
 
-// Funções de formatação de data
+// ----------------------
+// Utilitários de data
+// ----------------------
 const monthNames = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
@@ -27,23 +52,82 @@ const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 function formatDate(date) {
     const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0'); // Mês é 0-indexado
-    const year = d.getFullYear();
+    const day   = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year  = d.getFullYear();
     return `${day}/${month}/${year}`;
 }
 
-function parseDate(dateString) { // Converte "DD/MM/YYYY" para objeto Date
+function parseDate(dateString) {
     const [day, month, year] = dateString.split('/').map(Number);
     return new Date(year, month - 1, day);
 }
 
-// Função para renderizar o calendário
+// ----------------------
+// Controle de campos e botões do modal
+// ----------------------
+function setFormFieldsDisabled(disabled) {
+    jornadaServicoInput.disabled   = disabled;
+    comandanteInput.disabled       = disabled;
+    motoristaInput.disabled        = disabled;
+    patrulheiro1Input.disabled     = disabled;
+    patrulheiro2Input.disabled     = disabled;
+}
+
+function hideAllModalButtons() {
+    deleteServiceButton.classList.add('hidden');
+    editServiceButton.classList.add('hidden');
+    cancelModalButton.classList.add('hidden');
+    saveServiceButton.classList.add('hidden');
+}
+
+// Configura modal para "novo serviço"
+function setModalModeNew() {
+    modalTitle.textContent = 'Registrar Serviço';
+    setFormFieldsDisabled(false);
+
+    hideAllModalButtons(); // Esconde todos primeiro
+    cancelModalButton.classList.remove('hidden');
+    cancelModalButton.textContent = 'Cancelar';
+
+    saveServiceButton.classList.remove('hidden');
+    saveServiceButton.textContent = 'Salvar Serviço';
+}
+
+// Configura modal para "detalhes do serviço" (visualização)
+function setModalModeView() {
+    modalTitle.textContent = 'Detalhes do Serviço';
+    setFormFieldsDisabled(true);
+
+    hideAllModalButtons(); // Esconde todos primeiro
+    deleteServiceButton.classList.remove('hidden');
+    editServiceButton.classList.remove('hidden');
+    cancelModalButton.classList.remove('hidden');
+    cancelModalButton.textContent = 'Fechar';
+}
+
+// Configura modal para "editar serviço"
+function setModalModeEdit() {
+    modalTitle.textContent = 'Editar Serviço';
+    setFormFieldsDisabled(false);
+
+    hideAllModalButtons(); // Esconde todos primeiro
+    deleteServiceButton.classList.remove('hidden');
+    cancelModalButton.classList.remove('hidden');
+    cancelModalButton.textContent = 'Cancelar';
+
+    saveServiceButton.classList.remove('hidden');
+    saveServiceButton.textContent = 'Salvar Edição';
+}
+
+// ----------------------
+// Lógica do calendário
+// ----------------------
 function renderCalendar() {
-    calendarGrid.innerHTML = ''; // Limpa o calendário existente
+    calendarGrid.innerHTML = '';
     currentMonthYearSpan.textContent = `${monthNames[currentMonth]} ${currentYear}`;
 
-    // Adiciona os cabeçalhos dos dias da semana
+    // Cabeçalho dos dias
     dayNames.forEach(day => {
         const dayHeader = document.createElement('div');
         dayHeader.classList.add('day-header');
@@ -51,108 +135,173 @@ function renderCalendar() {
         calendarGrid.appendChild(dayHeader);
     });
 
-    const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const firstDayOfWeek = firstDayOfMonth.getDay(); // 0 para Domingo, 1 para Segunda, etc.
+    const firstDayOfMonth  = new Date(currentYear, currentMonth, 1);
+    const daysInMonth      = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const firstDayOfWeek   = firstDayOfMonth.getDay();
+    const today            = new Date();
 
-    // Preenche os dias vazios antes do primeiro dia do mês
+    // Espaços vazios antes do 1º dia
     for (let i = 0; i < firstDayOfWeek; i++) {
         const emptyDay = document.createElement('div');
-        emptyDay.classList.add('calendar-day');
+        emptyDay.classList.add('calendar-day', 'empty');
         calendarGrid.appendChild(emptyDay);
     }
 
-    // Preenche os dias do mês
+    // Dias do mês
     for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(currentYear, currentMonth, day);
+        const date         = new Date(currentYear, currentMonth, day);
+        const formattedDate = formatDate(date);
+
         const dayElement = document.createElement('div');
         dayElement.classList.add('calendar-day');
-        dayElement.dataset.date = formatDate(date); // Armazena a data formatada no dataset
+        dayElement.dataset.date = formattedDate;
 
         const dayNumber = document.createElement('span');
         dayNumber.classList.add('day-number');
         dayNumber.textContent = day;
         dayElement.appendChild(dayNumber);
 
-        // Marca o dia atual
-        const today = new Date();
         if (date.toDateString() === today.toDateString()) {
             dayElement.classList.add('today');
         }
 
-        // Adiciona um indicador se houver serviços para este dia (ainda não implementado)
-        // const servicesForDay = getServicesForDate(formatDate(date));
-        // if (servicesForDay.length > 0) {
-        //     const indicator = document.createElement('div');
-        //     indicator.classList.add('service-indicator');
-        //     dayElement.appendChild(indicator);
-        // }
+        const servicesForDay = getServicesForDate(formattedDate);
+        if (servicesForDay.length > 0) {
+            const service = servicesForDay[0]; // estamos usando 1 serviço por dia
 
-        dayElement.addEventListener('click', () => selectDate(date));
+            const serviceInfoDiv = document.createElement('div');
+            serviceInfoDiv.classList.add('service-info');
+            serviceInfoDiv.innerHTML = `
+                <p><strong>Jornada:</strong> ${service.jornada}</p>
+                <p><strong>Cmdt:</strong> ${service.comandante}</p>
+                <p><strong>Mot:</strong> ${service.motorista}</p>
+                ${service.patrulheiro1 ? `<p><strong>Patr 1:</strong> ${service.patrulheiro1}</p>` : ''}
+                ${service.patrulheiro2 ? `<p><strong>Patr 2:</strong> ${service.patrulheiro2}</p>` : ''}
+            `;
+            dayElement.appendChild(serviceInfoDiv);
+            dayElement.dataset.serviceId = String(service.id); // Garante que o ID é uma string
+        }
+
+        dayElement.addEventListener('click', () => {
+            selectedDateForModal = date;
+
+            const serviceIdAttr = dayElement.dataset.serviceId;
+            const serviceId = serviceIdAttr ? parseInt(serviceIdAttr, 10) : null; // Converte para número ou null
+            openServiceModal(serviceId);
+        });
+
         calendarGrid.appendChild(dayElement);
     }
-
-    // Atualiza a exibição dos serviços para a data selecionada (se houver)
-    if (selectedDate) {
-        displayServicesForSelectedDate();
-    } else {
-        serviceListDiv.innerHTML = '<p>Nenhum serviço agendado para esta data.</p>';
-        selectedDateDisplay.textContent = 'Nenhuma data selecionada';
-    }
 }
 
-// Função para selecionar uma data
-function selectDate(date) {
-    // Remove a classe 'selected' de qualquer dia previamente selecionado
-    const previouslySelected = document.querySelector('.calendar-day.selected');
-    if (previouslySelected) {
-        previouslySelected.classList.remove('selected');
-    }
-
-    // Adiciona a classe 'selected' ao novo dia
-    const newSelected = document.querySelector(`.calendar-day[data-date="${formatDate(date)}"]`);
-    if (newSelected) {
-        newSelected.classList.add('selected');
-    }
-
-    selectedDate = date;
-    selectedDateDisplay.textContent = `Serviços para: ${formatDate(selectedDate)}`;
-    displayServicesForSelectedDate();
+function getServicesForDate(formattedDate) {
+    return services.filter(service => service.date === formattedDate);
 }
 
-// Função para exibir os serviços da data selecionada (ainda sem dados reais)
-function displayServicesForSelectedDate() {
-    serviceListDiv.innerHTML = '';
-    if (!selectedDate) {
-        serviceListDiv.innerHTML = '<p>Nenhum serviço agendado para esta data.</p>';
+// ----------------------
+// Lógica do modal
+// ----------------------
+function openServiceModal(serviceId = null) {
+    if (!selectedDateForModal) {
+        alert('Erro: Nenhuma data selecionada.');
         return;
     }
 
-    const formattedSelectedDate = formatDate(selectedDate);
-    // Aqui, no futuro, vamos filtrar os 'services' pelo formattedSelectedDate
-    const servicesForDay = services.filter(service => service.date === formattedSelectedDate);
+    serviceForm.reset();
+    serviceIdInput.value = '';
+    currentServiceId = serviceId;
 
-    if (servicesForDay.length === 0) {
-        serviceListDiv.innerHTML = '<p>Nenhum serviço agendado para esta data.</p>';
+    serviceDateInput.value = formatDate(selectedDateForModal);
+
+    if (serviceId) {
+        // Dia COM serviço → modo VISUALIZAR
+        const service = services.find(s => s.id === serviceId);
+        if (!service) {
+            // Fallback: se por algum motivo não achar o serviço, trata como novo
+            jornadaServicoInput.value = '24h';
+            setModalModeNew();
+        } else {
+            // Preenche dados
+            serviceIdInput.value      = service.id;
+            jornadaServicoInput.value = service.jornada;
+            comandanteInput.value     = service.comandante;
+            motoristaInput.value      = service.motorista;
+            patrulheiro1Input.value   = service.patrulheiro1;
+            patrulheiro2Input.value   = service.patrulheiro2;
+
+            setModalModeView();
+        }
     } else {
-        servicesForDay.forEach(service => {
-            const serviceItem = document.createElement('div');
-            serviceItem.classList.add('service-item');
-            serviceItem.innerHTML = `
-                <p><strong>Companhia:</strong> ${service.company}</p>
-                <p><strong>Tipo:</strong> ${service.type}</p>
-                <p><strong>Policiais:</strong> ${service.officers}</p>
-                <p><strong>Horário:</strong> ${service.startTime} - ${service.endTime}</p>
-                <p><strong>Local:</strong> ${service.location}</p>
-                <p><strong>Obs:</strong> ${service.observations || 'N/A'}</p>
-            `;
-            serviceListDiv.appendChild(serviceItem);
-        });
+        // Dia SEM serviço → modo NOVO
+        jornadaServicoInput.value = '24h';
+        setModalModeNew();
     }
+
+    serviceModal.classList.remove('hidden');
 }
 
+function activateEditMode() {
+    if (!currentServiceId) return; // Só ativa edição se houver um serviço selecionado
+    setModalModeEdit();
+}
 
-// Event Listeners para navegação do calendário
+function closeServiceModal() {
+    serviceModal.classList.add('hidden');
+    currentServiceId = null;
+}
+
+// Salvar (novo ou edição)
+function handleServiceFormSubmit(event) {
+    event.preventDefault();
+
+    const id = serviceIdInput.value ? parseInt(serviceIdInput.value, 10) : null;
+
+    const serviceData = {
+        date: serviceDateInput.value,
+        jornada: jornadaServicoInput.value,
+        comandante: comandanteInput.value,
+        motorista: motoristaInput.value,
+        patrulheiro1: patrulheiro1Input.value,
+        patrulheiro2: patrulheiro2Input.value
+    };
+
+    if (!serviceData.comandante || !serviceData.motorista) {
+        alert('Comandante e Motorista são campos obrigatórios.');
+        return;
+    }
+
+    if (id) {
+        // Edição
+        const idx = services.findIndex(s => s.id === id);
+        if (idx !== -1) {
+            services[idx] = { ...services[idx], ...serviceData };
+        }
+    } else {
+        // Novo
+        serviceData.id = nextServiceId++;
+        services.push(serviceData);
+    }
+
+    closeServiceModal();
+    renderCalendar();
+}
+
+// Excluir serviço
+function handleDeleteService() {
+    const id = serviceIdInput.value ? parseInt(serviceIdInput.value, 10) : null;
+    if (!id) return;
+
+    const confirmation = confirm('Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita.');
+    if (!confirmation) return;
+
+    services = services.filter(s => s.id !== id);
+    closeServiceModal();
+    renderCalendar();
+}
+
+// ----------------------
+// Navegação do calendário
+// ----------------------
 prevMonthButton.addEventListener('click', () => {
     currentMonth--;
     if (currentMonth < 0) {
@@ -171,16 +320,15 @@ nextMonthButton.addEventListener('click', () => {
     renderCalendar();
 });
 
-// Event Listener para o botão "Adicionar Novo Serviço" (ainda sem funcionalidade)
-addServiceButton.addEventListener('click', () => {
-    if (selectedDate) {
-        alert(`Você clicou para adicionar um serviço para ${formatDate(selectedDate)}. Esta funcionalidade será implementada em breve!`);
-        // Aqui vamos abrir um formulário para adicionar o serviço
-    } else {
-        alert('Por favor, selecione uma data no calendário primeiro.');
-    }
-});
+// ----------------------
+// Eventos do modal
+// ----------------------
+cancelModalButton.addEventListener('click', closeServiceModal);
+editServiceButton.addEventListener('click', activateEditMode);
+deleteServiceButton.addEventListener('click', handleDeleteService);
+serviceForm.addEventListener('submit', handleServiceFormSubmit);
 
-
-// Inicializa o calendário ao carregar a página
+// ----------------------
+// Inicialização
+// ----------------------
 document.addEventListener('DOMContentLoaded', renderCalendar);

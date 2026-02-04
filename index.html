@@ -24,21 +24,64 @@
                 <!-- O calendário será gerado aqui pelo JavaScript -->
             </div>
         </section>
-
-        <section id="service-details-section">
-            <h2>Serviços do Dia Selecionado</h2>
-            <div id="selected-date-display">Nenhuma data selecionada</div>
-            <div id="service-list">
-                <!-- Os serviços do dia selecionado serão exibidos aqui -->
-                <p>Nenhum serviço agendado para esta data.</p>
-            </div>
-            <button id="addServiceButton">Adicionar Novo Serviço</button>
-        </section>
     </main>
 
     <footer>
         <p>&copy; 2026 Sistema de Gestão de Escala PM</p>
     </footer>
+
+    <!-- Modal de Cadastro/Edição/Visualização de Serviço -->
+    <div id="service-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="modal-title">Registrar Serviço</h2>
+            <form id="service-form">
+                <input type="hidden" id="service-id" name="serviceId"> <!-- Campo oculto para o ID do serviço -->
+
+                <div class="form-group">
+                    <label for="service-date">Data do Serviço</label>
+                    <input type="text" id="service-date" name="serviceDate" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="jornada-servico">Jornada de Serviço</label>
+                    <select id="jornada-servico" name="jornadaServico" required disabled>
+                        <option value="24h">24h</option> <!-- Padrão -->
+                        <option value="6h">6h</option>
+                        <option value="12h">12h</option>
+                        <option value="48h">48h</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="comandante">Comandante</label>
+                    <input type="text" id="comandante" name="comandante" placeholder="Nome ou Matrícula" required disabled>
+                </div>
+
+                <div class="form-group">
+                    <label for="motorista">Motorista</label>
+                    <input type="text" id="motorista" name="motorista" placeholder="Nome ou Matrícula" required disabled>
+                </div>
+
+                <div class="form-group">
+                    <label for="patrulheiro1">Patrulheiro 1</label>
+                    <input type="text" id="patrulheiro1" name="patrulheiro1" placeholder="Nome ou Matrícula" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label for="patrulheiro2">Patrulheiro 2</label>
+                    <input type="text" id="patrulheiro2" name="patrulheiro2" placeholder="Nome ou Matrícula" disabled>
+                </div>
+
+                <div class="modal-actions">
+                    <!-- Botões para o modo de visualização/edição -->
+                    <button type="button" id="delete-service-btn" class="action-button hidden">Excluir Serviço</button>
+                    <button type="button" id="edit-service-btn" class="action-button hidden">Editar Serviço</button>
+                    <button type="button" id="cancel-modal-btn" class="action-button hidden">Cancelar</button>
+                    <button type="submit" id="save-service-btn" class="action-button hidden">Salvar Serviço</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
