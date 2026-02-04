@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Escala PM - 18º BPM</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Gestão de Escala de Serviços - 18º BPM</h1>
+        <p>1ª, 2ª e 3ª Companhias</p>
+    </header>
+
+    <main>
+        <section id="calendar-section">
+            <h2>Calendário de Escalas</h2>
+            <div id="calendar-nav">
+                <button id="prevMonth">Mês Anterior</button>
+                <span id="currentMonthYear">Fevereiro 2026</span>
+                <button id="nextMonth">Próximo Mês</button>
+            </div>
+            <div id="calendar-grid">
+                <!-- O calendário será gerado aqui pelo JavaScript -->
+            </div>
+        </section>
+
+        <section id="service-details-section">
+            <h2>Serviços do Dia Selecionado</h2>
+            <div id="selected-date-display">Nenhuma data selecionada</div>
+            <div id="service-list">
+                <!-- Os serviços do dia selecionado serão exibidos aqui -->
+                <p>Nenhum serviço agendado para esta data.</p>
+            </div>
+            <button id="addServiceButton">Adicionar Novo Serviço</button>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Sistema de Gestão de Escala PM</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
