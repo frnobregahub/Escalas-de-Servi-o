@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro de Policiais Militares</title>
-    <link rel="stylesheet" href="style.css"> <!-- Mantém o estilo base -->
-    <link rel="stylesheet" href="cadastro-pm.css"> <!-- Estilo específico para esta página -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="cadastro-pm.css">
 </head>
 <body>
     <header>
         <div class="header-content">
             <h1>Cadastro de Policiais Militares</h1>
             <p>Gerencie o efetivo do 18º BPM</p>
-            <button id="voltarButton" class="header-button">Voltar ao Calendário</button>
+            <a href="index.html" class="header-button">Voltar ao Calendário</a>
         </div>
     </header>
 
@@ -20,17 +20,40 @@
         <section class="cadastro-form-section">
             <h2>Novo Policial Militar</h2>
             <form id="pm-form">
-                <input type="hidden" id="pm-id">
+                <input type="hidden" id="pm-id" value="">
+
                 <div class="form-group">
-                    <label for="pm-nome">Nome Completo</label>
+                    <label for="pm-nome">Nome Completo *</label>
                     <input type="text" id="pm-nome" placeholder="Ex: João da Silva" required>
                 </div>
+
                 <div class="form-group">
-                    <label for="pm-matricula">Matrícula</label>
-                    <input type="text" id="pm-matricula" placeholder="Ex: 123456" required>
+                    <label for="pm-matricula">Matrícula (apenas números) *</label>
+                    <input type="text" id="pm-matricula" placeholder="Ex: 1234567" maxlength="7" required>
                 </div>
+
                 <div class="form-group">
-                    <label for="pm-companhia">Companhia</label>
+                    <label for="pm-nome-guerra">Nome de Guerra *</label>
+                    <select id="pm-nome-guerra" required>
+                        <option value="">Selecione um nome</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="pm-graduacao">Graduação *</label>
+                    <select id="pm-graduacao" required>
+                        <option value="">Selecione a Graduação</option>
+                        <option value="Subtenente (ST)">Subtenente (ST)</option>
+                        <option value="1º Sargento (1º SGT)">1º Sargento (1º SGT)</option>
+                        <option value="2º Sargento (2º SGT)">2º Sargento (2º SGT)</option>
+                        <option value="3º Sargento (3º SGT)">3º Sargento (3º SGT)</option>
+                        <option value="Cabo (CB)">Cabo (CB)</option>
+                        <option value="Soldado (SD)">Soldado (SD)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="pm-companhia">Companhia *</label>
                     <select id="pm-companhia" required>
                         <option value="">Selecione a Companhia</option>
                         <option value="1ª Cia">1ª Cia</option>
@@ -38,15 +61,36 @@
                         <option value="3ª Cia">3ª Cia</option>
                     </select>
                 </div>
+
                 <div class="form-group">
-                    <label for="pm-funcao">Função Principal</label>
-                    <select id="pm-funcao" required>
-                        <option value="">Selecione a Função</option>
-                        <option value="Comandante">Comandante</option>
-                        <option value="Motorista">Motorista</option>
-                        <option value="Patrulheiro">Patrulheiro</option>
+                    <label for="pm-qpp">Quadrante de Policiamento Preventivo - QPP *</label>
+                    <select id="pm-qpp" required>
+                        <option value="">Selecione o QPP</option>
                     </select>
                 </div>
+
+                <div class="form-group">
+                    <label for="pm-situacao">Situação *</label>
+                    <select id="pm-situacao" required>
+                        <option value="Apto ao Serviço" selected>Apto ao Serviço</option>
+                        <option value="Atestado Médico">Atestado Médico</option>
+                        <option value="Férias">Férias</option>
+                        <option value="Licenças">Licenças</option>
+                        <option value="Outros Afastamentos">Outros Afastamentos</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="pm-funcao">Função *</label>
+                    <select id="pm-funcao" required>
+                        <option value="">Selecione a Função</option>
+                        <option value="Comandante (CMT)">Comandante (CMT)</option>
+                        <option value="Motorista (Mot.)">Motorista (Mot.)</option>
+                        <option value="Patrulheiro 1 (P1)">Patrulheiro 1 (P1)</option>
+                        <option value="Patrulheiro 2 (P2)">Patrulheiro 2 (P2)</option>
+                    </select>
+                </div>
+
                 <div class="form-actions">
                     <button type="button" id="cancel-pm-form" class="action-button">Limpar Formulário</button>
                     <button type="submit" id="save-pm-button" class="action-button">Cadastrar PM</button>
@@ -58,7 +102,6 @@
             <h2>Policiais Cadastrados</h2>
             <div id="pm-list">
                 <p>Nenhum policial cadastrado ainda.</p>
-                <!-- Lista de PMs será gerada aqui pelo JavaScript -->
             </div>
         </section>
     </main>

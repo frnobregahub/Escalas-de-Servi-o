@@ -1,146 +1,325 @@
-// cadastro-pm.js
+// ============================================
+// DADOS GLOBAIS
+// ============================================
+const QPP_DATA = {
+    '1ª Cia': ['Alcantil', 'Barra de Santana', 'Caturité', 'Fagundes', 'Queimadas'],
+    '2ª Cia': ['Aroeiras', 'Gado Bravo', 'Natuba', 'Santa Cecília', 'Umbuzeiro'],
+    '3ª Cia': ['Boqueirão', 'Barra de São Miguel', 'Cabaceiras', 'Riacho de Santo Antônio', 'São Domingos do Cariri']
+};
 
-// Elementos da página
-const voltarButton = document.getElementById('voltarButton');
-const pmForm = document.getElementById('pm-form');
-const pmIdInput = document.getElementById('pm-id');
-const pmNomeInput = document.getElementById('pm-nome');
-const pmMatriculaInput = document.getElementById('pm-matricula');
-const pmCompanhiaInput = document.getElementById('pm-companhia');
-const pmFuncaoInput = document.getElementById('pm-funcao');
-const savePmButton = document.getElementById('save-pm-button');
-const cancelPmFormButton = document.getElementById('cancel-pm-form');
-const pmListDiv = document.getElementById('pm-list');
+// Ordem de antiguidade das graduações (índice menor = mais antigo)
+const ORDEM_GRADUACOES = {
+    'Subtenente (ST)': 0,
+    '1º Sargento (1º SGT)': 1,
+    '2º Sargento (2º SGT)': 2,
+    '3º Sargento (3º SGT)': 3,
+    'Cabo (CB)': 4,
+    'Soldado (SD)': 5
+};
 
-// "Banco de dados" em memória para os PMs
-let policiaisMilitares = [];
-let nextPmId = 1;
+let PMS = [];
+let NEXT_ID = 1;
 
-// Função para salvar os PMs no localStorage (para persistência básica)
-function savePmsToLocalStorage() {
-    localStorage.setItem('policiaisMilitares', JSON.stringify(policiaisMilitares));
-    localStorage.setItem('nextPmId', nextPmId);
+// ============================================
+// ELEMENTOS DO DOM
+// ============================================
+const form = document.getElementById('pm-form');
+const inputId = document.getElementById('pm-id');
+const inputNome = document.getElementById('pm-nome');
+const inputMatricula = document.getElementById('pm-matricula');
+const selectGuerra = document.getElementById('pm-nome-guerra');
+const selectGraduacao = document.getElementById('pm-graduacao');
+const selectCompanhia = document.getElementById('pm-companhia');
+const selectQpp = document.getElementById('pm-qpp');
+const selectSituacao = document.getElementById('pm-situacao');
+const selectFuncao = document.getElementById('pm-funcao');
+const btnLimpar = document.getElementById('cancel-pm-form');
+const btnSalvar = document.getElementById('save-pm-button');
+const divLista = document.getElementById('pm-list');
+
+// ============================================
+// INICIALIZAÇÃO
+// ============================================
+window.addEventListener('DOMContentLoaded', function() {
+    carregarDados();
+    renderizarLista();
+    configurarEventos();
+});
+
+// ============================================
+// EVENTOS
+// ============================================
+function configurarEventos() {
+    inputNome.addEventListener('input', atualizarNomesGuerra);
+    selectCompanhia.addEventListener('change', atualizarQpp);
+    inputMatricula.addEventListener('input', validarMatricula);
+    form.addEventListener('submit', salvarPm);
+    btnLimpar.addEventListener('click', limparFormulario);
 }
 
-// Função para carregar os PMs do localStorage
-function loadPmsFromLocalStorage() {
-    const storedPms = localStorage.getItem('policiaisMilitares');
-    const storedNextPmId = localStorage.getItem('nextPmId');
-    if (storedPms) {
-        policiaisMilitares = JSON.parse(storedPms);
-    }
-    if (storedNextPmId) {
-        nextPmId = parseInt(storedNextPmId, 10);
+// ============================================
+// MATRÍCULA
+// ============================================
+function validarMatricula(e) {
+    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    if (e.target.value.length > 7) {
+        e.target.value = e.target.value.substring(0, 7);
     }
 }
 
-// Renderiza a lista de PMs
-function renderPmList() {
-    pmListDiv.innerHTML = ''; // Limpa a lista atual
+function formatarMatricula(numero) {
+    const n = numero.replace(/[^0-9]/g, '');
+    if (n.length !== 7) return numero;
+    return n.substring(0, 3) + '.' + n.substring(3, 6) + '-' + n.substring(6, 7);
+}
 
-    if (policiaisMilitares.length === 0) {
-        pmListDiv.innerHTML = '<p>Nenhum policial cadastrado ainda.</p>';
+// ============================================
+// NOME DE GUERRA
+// ============================================
+function atualizarNomesGuerra() {
+    const nome = inputNome.value.trim();
+    const nomes = nome.split(/\s+/).filter(n => n.length > 0).map(n => n.toUpperCase());
+
+    selectGuerra.innerHTML = '<option value="">Selecione um nome</option>';
+
+    nomes.forEach(n => {
+        const opt = document.createElement('option');
+        opt.value = n;
+        opt.textContent = n;
+        selectGuerra.appendChild(opt);
+    });
+
+    if (nomes.length === 1) {
+        selectGuerra.value = nomes[0];
+    }
+}
+
+// ============================================
+// QPP
+// ============================================
+function atualizarQpp() {
+    const cia = selectCompanhia.value;
+    selectQpp.innerHTML = '<option value="">Selecione o QPP</option>';
+
+    if (!cia || !QPP_DATA[cia]) {
+        selectQpp.disabled = true;
         return;
     }
 
-    policiaisMilitares.forEach(pm => {
-        const pmItem = document.createElement('div');
-        pmItem.classList.add('pm-item');
-        pmItem.dataset.pmId = pm.id;
-
-        pmItem.innerHTML = `
-            <div class="pm-details">
-                <p><strong>Nome:</strong> ${pm.nome}</p>
-                <p><strong>Matrícula:</strong> ${pm.matricula}</p>
-                <p><strong>Companhia:</strong> ${pm.companhia}</p>
-                <p><strong>Função:</strong> ${pm.funcao}</p>
-            </div>
-            <div class="pm-actions">
-                <button class="edit-pm-btn">Editar</button>
-                <button class="delete-pm-btn">Excluir</button>
-            </div>
-        `;
-
-        // Adiciona eventos para os botões de editar e excluir
-        pmItem.querySelector('.edit-pm-btn').addEventListener('click', () => editPm(pm.id));
-        pmItem.querySelector('.delete-pm-btn').addEventListener('click', () => deletePm(pm.id));
-
-        pmListDiv.appendChild(pmItem);
+    selectQpp.disabled = false;
+    QPP_DATA[cia].forEach(qpp => {
+        const opt = document.createElement('option');
+        opt.value = qpp;
+        opt.textContent = qpp;
+        selectQpp.appendChild(opt);
     });
 }
 
-// Preenche o formulário para edição
-function editPm(id) {
-    const pmToEdit = policiaisMilitares.find(pm => pm.id === id);
-    if (pmToEdit) {
-        pmIdInput.value = pmToEdit.id;
-        pmNomeInput.value = pmToEdit.nome;
-        pmMatriculaInput.value = pmToEdit.matricula;
-        pmCompanhiaInput.value = pmToEdit.companhia;
-        pmFuncaoInput.value = pmToEdit.funcao;
-        savePmButton.textContent = 'Salvar Edição';
+// ============================================
+// SALVAR PM
+// ============================================
+function salvarPm(e) {
+    e.preventDefault();
+
+    const nome = inputNome.value.trim();
+    const matricula = inputMatricula.value.trim();
+    const guerra = selectGuerra.value.trim();
+    const graduacao = selectGraduacao.value;
+    const cia = selectCompanhia.value;
+    const qpp = selectQpp.value;
+    const situacao = selectSituacao.value;
+    const funcao = selectFuncao.value;
+
+    // Validações
+    if (!nome) {
+        alert('Preencha o Nome Completo');
+        return;
     }
-}
-
-// Exclui um PM
-function deletePm(id) {
-    const confirmation = confirm('Tem certeza que deseja excluir este policial? Esta ação não pode ser desfeita.');
-    if (confirmation) {
-        policiaisMilitares = policiaisMilitares.filter(pm => pm.id !== id);
-        savePmsToLocalStorage();
-        renderPmList();
-        // Se o PM excluído era o que estava sendo editado, limpa o formulário
-        if (parseInt(pmIdInput.value, 10) === id) {
-            clearForm();
-        }
+    if (matricula.length !== 7) {
+        alert('Matrícula deve ter 7 números');
+        return;
     }
-}
+    if (!guerra) {
+        alert('Selecione um Nome de Guerra');
+        return;
+    }
+    if (!graduacao) {
+        alert('Selecione uma Graduação');
+        return;
+    }
+    if (!cia) {
+        alert('Selecione uma Companhia');
+        return;
+    }
+    if (!qpp) {
+        alert('Selecione um QPP');
+        return;
+    }
+    if (!funcao) {
+        alert('Selecione uma Função');
+        return;
+    }
 
-// Limpa o formulário
-function clearForm() {
-    pmForm.reset();
-    pmIdInput.value = '';
-    savePmButton.textContent = 'Cadastrar PM';
-}
+    const matriculaFormatada = formatarMatricula(matricula);
+    const id = inputId.value ? parseInt(inputId.value) : null;
 
-// Lida com o envio do formulário
-function handlePmFormSubmit(event) {
-    event.preventDefault();
-
-    const id = pmIdInput.value ? parseInt(pmIdInput.value, 10) : null;
-
-    const pmData = {
-        nome: pmNomeInput.value,
-        matricula: pmMatriculaInput.value,
-        companhia: pmCompanhiaInput.value,
-        funcao: pmFuncaoInput.value
+    const pm = {
+        id: id || NEXT_ID++,
+        nome,
+        matricula: matriculaFormatada,
+        nomeGuerra: guerra,
+        graduacao,
+        companhia: cia,
+        qpp,
+        situacao,
+        funcao
     };
 
-    if (id) { // Edição
-        const index = policiaisMilitares.findIndex(pm => pm.id === id);
-        if (index !== -1) {
-            policiaisMilitares[index] = { ...policiaisMilitares[index], ...pmData };
+    if (id) {
+        const idx = PMS.findIndex(p => p.id === id);
+        if (idx !== -1) {
+            PMS[idx] = pm;
         }
-    } else { // Novo cadastro
-        pmData.id = nextPmId++;
-        policiaisMilitares.push(pmData);
+    } else {
+        PMS.push(pm);
     }
 
-    savePmsToLocalStorage();
-    renderPmList();
-    clearForm();
+    salvarDados();
+    renderizarLista();
+    limparFormulario();
+    alert('Policial salvo com sucesso!');
 }
 
-// Event Listeners
-voltarButton.addEventListener('click', () => {
-    window.location.href = 'index.html'; // Volta para a página principal
-});
+// ============================================
+// EDITAR PM
+// ============================================
+function editarPm(id) {
+    const pm = PMS.find(p => p.id === id);
+    if (!pm) return;
 
-pmForm.addEventListener('submit', handlePmFormSubmit);
-cancelPmFormButton.addEventListener('click', clearForm);
+    inputId.value = id;
+    inputNome.value = pm.nome;
+    inputMatricula.value = pm.matricula.replace(/[^0-9]/g, '');
+    selectGraduacao.value = pm.graduacao;
+    selectCompanhia.value = pm.companhia;
+    selectSituacao.value = pm.situacao;
+    selectFuncao.value = pm.funcao;
 
-// Inicialização
-document.addEventListener('DOMContentLoaded', () => {
-    loadPmsFromLocalStorage();
-    renderPmList();
-});
+    atualizarNomesGuerra();
+    selectGuerra.value = pm.nomeGuerra;
+
+    atualizarQpp();
+    selectQpp.value = pm.qpp;
+
+    btnSalvar.textContent = 'Salvar Edição';
+}
+
+// ============================================
+// EXCLUIR PM
+// ============================================
+function excluirPm(id) {
+    if (!confirm('Tem certeza?')) return;
+
+    PMS = PMS.filter(p => p.id !== id);
+    salvarDados();
+    renderizarLista();
+
+    if (parseInt(inputId.value) === id) {
+        limparFormulario();
+    }
+}
+
+// ============================================
+// LIMPAR FORMULÁRIO
+// ============================================
+function limparFormulario() {
+    form.reset();
+    inputId.value = '';
+    selectGuerra.innerHTML = '<option value="">Selecione um nome</option>';
+    selectQpp.innerHTML = '<option value="">Selecione o QPP</option>';
+    selectQpp.disabled = true;
+    selectSituacao.value = 'Apto ao Serviço';
+    btnSalvar.textContent = 'Cadastrar PM';
+}
+
+// ============================================
+// ORDENAR PMS POR ANTIGUIDADE
+// ============================================
+function ordenarPmsPorAntiguidade() {
+    return [...PMS].sort((a, b) => {
+        // Primeiro, ordena por graduação (mais antigo primeiro)
+        const ordemA = ORDEM_GRADUACOES[a.graduacao] || 999;
+        const ordemB = ORDEM_GRADUACOES[b.graduacao] || 999;
+
+        if (ordemA !== ordemB) {
+            return ordemA - ordemB;
+        }
+
+        // Se a graduação for a mesma, ordena por matrícula (menor = mais antigo)
+        const matriculaA = parseInt(a.matricula.replace(/[^0-9]/g, ''));
+        const matriculaB = parseInt(b.matricula.replace(/[^0-9]/g, ''));
+
+        return matriculaA - matriculaB;
+    });
+}
+
+// ============================================
+// RENDERIZAR LISTA
+// ============================================
+function renderizarLista() {
+    divLista.innerHTML = '';
+
+    if (PMS.length === 0) {
+        divLista.innerHTML = '<p>Nenhum policial cadastrado ainda.</p>';
+        return;
+    }
+
+    const pmOrdenados = ordenarPmsPorAntiguidade();
+
+    pmOrdenados.forEach(pm => {
+        const div = document.createElement('div');
+        div.className = 'pm-item';
+        div.innerHTML = `
+            <div class="pm-details">
+                <p><strong>Nome:</strong> ${pm.nome}</p>
+                <p><strong>Matrícula:</strong> ${pm.matricula}</p>
+                <p><strong>Nome de Guerra:</strong> ${pm.nomeGuerra}</p>
+                <p><strong>Graduação:</strong> ${pm.graduacao}</p>
+                <p><strong>Companhia:</strong> ${pm.companhia}</p>
+                <p><strong>QPP:</strong> ${pm.qpp}</p>
+                <p><strong>Situação:</strong> ${pm.situacao}</p>
+                <p><strong>Função:</strong> ${pm.funcao}</p>
+            </div>
+            <div class="pm-actions">
+                <button class="edit-pm-btn" onclick="editarPm(${pm.id})">Editar</button>
+                <button class="delete-pm-btn" onclick="excluirPm(${pm.id})">Excluir</button>
+            </div>
+        `;
+        divLista.appendChild(div);
+    });
+}
+
+// ============================================
+// LOCALSTORAGE
+// ============================================
+function salvarDados() {
+    localStorage.setItem('pms', JSON.stringify(PMS));
+    localStorage.setItem('nextId', NEXT_ID.toString());
+}
+
+function carregarDados() {
+    const dados = localStorage.getItem('pms');
+    const id = localStorage.getItem('nextId');
+
+    if (dados) {
+        try {
+            PMS = JSON.parse(dados);
+        } catch (e) {
+            PMS = [];
+        }
+    }
+
+    if (id) {
+        NEXT_ID = parseInt(id, 10);
+    }
+}
